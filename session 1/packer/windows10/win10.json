@@ -1,0 +1,52 @@
+
+
+{
+
+    "builders": [{    
+    "type": "virtualbox-iso",
+    "communicator": "winrm",
+    "floppy_files": [
+      "F:\\Aurora\\image\\windows10\\autounattend.xml",
+      "F:\\Aurora\\image\\windows10\\winrm.ps1"
+    ],
+    "guest_os_type": "Windows10_64",
+    "headless": true,
+    "iso_url": "D:\\Downloads\\19044.1288.211006-0501.21h2_release_svc_refresh_CLIENTENTERPRISEEVAL_OEMRET_x64FRE_en-us.iso",
+    "iso_checksum": "md5:ae1da210fffa81bb6a8df455eca9636b",    
+    "winrm_username": "vagrant",
+    "winrm_password": "vagrant",
+    "winrm_timeout": "6h",
+    "winrm_insecure": true,
+    "shutdown_command": "shutdown /s /t 0 /f /d p:4:1 /c \"Packer Shutdown\"",
+    "guest_additions_mode": "attach",
+    "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "2048"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "2"
+        ],
+	[
+	  "modifyvm",
+	  "{{.Name}}",
+	  "--vram", 
+	  "32"
+	]	
+      ]
+    } 
+],
+"post-processors": [
+  {
+    "type": "vagrant",
+    "keep_input_artifact": false,
+    "output": "{{.Provider}}_windows-10.box"
+    
+  }
+]
+}
