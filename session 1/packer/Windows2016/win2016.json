@@ -14,28 +14,21 @@
       "iso_checksum": "md5:70721288bbcdfe3239d8f8c0fae55f1f",
       "communicator": "winrm",
       "winrm_insecure": true,
-      "winrm_use_ssl": true,
+      "winrm_use_ssl": false,
       "winrm_username": "vagrant",
       "winrm_password": "vagrant",
       "winrm_timeout": "12h",
       "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
       "shutdown_timeout": "15m",
       "floppy_files": [
-        "F:\\Aurora\\image\\Windows2016\\answerfiles\\autounattend.xml",
-        "F:\\Aurora\\image\\Windows2016\\scripts\\winrm.ps1"
+        "F:\\Auror\\project Auror\\Session 1\\packer\\Windows2016\\answerfiles\\autounattend.xml",
+        "F:\\Auror\\project Auror\\Session 1\\packer\\Windows2016\\scripts\\winrm.ps1"
 
       ]
     }
     
   ],
-  "provisioners": [
-   
-    {
-        "type": "powershell",
-        "scripts": ["F:\\Aurora\\image\\Windows2016\\scripts\\ad-forest.ps1"]
-    }
   
-  ],
   "post-processors": [
     {
       "type": "vagrant",

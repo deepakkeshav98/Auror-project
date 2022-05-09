@@ -1,37 +1,12 @@
-net user vagrant vagrant
-wmic useraccount where "name='Administrator'" set PasswordExpires=FALSE
-
-Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -ErrorAction Ignore
-
-# Don't set this before Set-ExecutionPolicy as it throws an error
-$ErrorActionPreference = "stop"
-
-# Remove HTTP listener
-Remove-Item -Path WSMan:\Localhost\listener\listener* -Recurse
-
-# Create a self-signed certificate to let ssl work
-$Cert = New-SelfSignedCertificate -CertstoreLocation Cert:\LocalMachine\My -DnsName "packer"
-New-Item -Path WSMan:\LocalHost\Listener -Transport HTTPS -Address * -CertificateThumbPrint $Cert.Thumbprint -Force
-
-# WinRM
-write-output "Setting up WinRM"
-write-host "(host) setting up WinRM"
-
-# Configure WinRM to allow unencrypted communication, and provide the
-# self-signed cert to the WinRM listener.
-cmd.exe /c winrm quickconfig -q
-cmd.exe /c winrm set "winrm/config/service" '@{AllowUnencrypted="true"}'
-cmd.exe /c winrm set "winrm/config/client" '@{AllowUnencrypted="true"}'
-cmd.exe /c winrm set "winrm/config/service/auth" '@{Basic="true"}'
-cmd.exe /c winrm set "winrm/config/client/auth" '@{Basic="true"}'
-cmd.exe /c winrm set "winrm/config/service/auth" '@{CredSSP="true"}'
-cmd.exe /c winrm set "winrm/config/listener?Address=*+Transport=HTTPS" "@{Port=`"5986`";Hostname=`"packer`";CertificateThumbprint=`"$($Cert.Thumbprint)`"}"
-
-# Make sure appropriate firewall port openings exist
-cmd.exe /c netsh advfirewall firewall set rule group="remote administration" new enable=yes
-cmd.exe /c netsh advfirewall firewall add rule name= "Open Port 5986" dir=in action=allow protocol=TCP localport=5986
-
-# Restart WinRM, and set it so that it auto-launches on startup.
-cmd.exe /c net stop winrm
-cmd.exe /c sc config winrm start= auto
-cmd.exe /c net start winrm
+powershell.exe -c "Set-NetConnectionProfile -InterfaceAlias Ethernet -NetworkCategory Private"
+powershell.exe -c "Enable-PSRemoting -Force"
+winrm quickconfig -q
+winrm quickconfig -transport:http
+powershell.exe -c "winrm set winrm/config '@{MaxTimeoutms=\`"1800000\`"}'"
+powershell.exe -c "winrm set winrm/config/winrs '@{MaxMemoryPerShellMB=\`"800\`"}'"
+powershell.exe -c "winrm set winrm/config/service '@{AllowUnencrypted=\`"true\`"}'"
+powershell.exe -c "winrm set winrm/config/service/auth '@{Basic=\`"true\`"}'"
+powershell.exe -c "winrm set winrm/config/client/auth '@{Basic=\`"true\`"}'"
+netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes action=allow remoteip=any
+powershell.exe -c "Restart-Service winrm"
+netsh advfirewall firewall add rule name="Port 5985" dir=in action=allow protocol=TCP localport=5985
