@@ -1,0 +1,97 @@
+
+Vagrant.configure("2") do |config|
+#Configure DC  
+  config.vm.define "win16" do |win16|
+
+  win16.vm.box = "win-2016"
+  win16.vm.hostname = "DC-01"
+
+  win16.vm.network "private_network", ip: "10.0.0.10"
+
+  win16.vm.communicator = "winrm"
+  win16.winrm.transport = :plaintext
+  win16.winrm.ssl_peer_verification = false
+  win16.winrm.basic_auth_only = true
+  
+  win16.winrm.max_tries = 300 # default is 20
+  win16.winrm.retry_delay = 2
+
+
+ 
+   win16.vm.provider "virtualbox" do |vb|
+  #   # Display the VirtualBox GUI when booting the machine
+     vb.gui = true
+     vb.name = "win-2016 DC"
+     
+  #
+  #   # Customize the amount of memory on the VM:
+     vb.memory = "2048"
+    end
+  win16.vm.provision "shell", path: "./scripts/ad-forest.ps1"
+  win16.vm.provision :reload
+  win16.vm.provision "shell", path: "./scripts/setdns.ps1"
+  win16.vm.provision "shell", path: "./scripts/adduser.ps1"
+  
+  end
+#Configure server machine
+  config.vm.define "win16srv" do |win16srv|
+
+    win16srv.vm.box = "win-2016"
+    win16srv.vm.hostname = "server-01"
+    win16srv.vm.network "private_network", ip: "10.0.0.15"
+  
+    win16srv.vm.communicator = "winrm"
+    win16srv.winrm.transport = :plaintext
+    win16srv.winrm.ssl_peer_verification = false
+    win16srv.winrm.basic_auth_only = true
+    win16srv.winrm.username = "vagrant"
+    win16srv.winrm.password = "vagrant"
+    win16srv.winrm.max_tries = 300 # default is 20
+    win16srv.winrm.retry_delay = 2
+  
+  
+   
+     win16srv.vm.provider "virtualbox" do |vb|
+    #   # Display the VirtualBox GUI when booting the machine
+       vb.gui = true
+       vb.name = "win-2016 server"
+    #
+    #   # Customize the amount of memory on the VM:
+       vb.memory = "2048"
+      end
+    win16srv.vm.provision "windows-sysprep"
+    
+    win16srv.vm.provision "shell", path: "./scripts/initialize.ps1"
+    win16srv.vm.provision :reload
+    
+    end
+#Configure our machine to monitor AD
+  config.vm.define "win10" do |win10|
+
+  win10.vm.box = "win-10"
+  win10.vm.hostname = "PC-01"
+  win10.vm.network :forwarded_port, guest: 3389, host: 3389, id: "rdp", auto_correct: true
+  win10.vm.network "private_network", ip: "10.0.0.5"
+
+    win10.vm.communicator = "winrm"
+    win10.winrm.transport = :plaintext
+    win10.winrm.basic_auth_only = true
+    win10.winrm.username = "vagrant"
+    win10.winrm.password = "vagrant"
+
+ 
+  config.vm.provider "virtualbox" do |vb|
+  #   # Display the VirtualBox GUI when booting the machine
+  vb.gui = true
+  vb.name= "win-10"
+  #
+  #   # Customize the amount of memory on the VM:
+  vb.memory = "2048"
+  end
+  win10.vm.provision "shell", path: "./scripts/initialize.ps1"
+  win10.vm.provision :reload
+  end
+
+  
+end
+
